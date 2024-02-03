@@ -5,3 +5,10 @@
 /.build
 /.bin
 /.vs
+
+.vscode/
+.xmake/
+.cache/
+vsxmake*/
+
+build/
