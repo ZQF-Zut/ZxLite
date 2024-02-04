@@ -71,106 +71,6 @@ namespace RxLite
 	};
 }
 
-namespace RxLite::Cmd
-{
-	static constexpr size_t PUT_BUFFER_MAX = 1024;
-	static HANDLE sg_hInputHandle = INVALID_HANDLE_VALUE;
-	static HANDLE sg_hOutputHandle = INVALID_HANDLE_VALUE;
-
-	BOOL Alloc()
-	{
-		::AllocConsole();
-		::AttachConsole(ATTACH_PARENT_PROCESS);
-		sg_hInputHandle = ::GetStdHandle(STD_INPUT_HANDLE);
-		sg_hOutputHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
-		return (sg_hOutputHandle == INVALID_HANDLE_VALUE || sg_hInputHandle == INVALID_HANDLE_VALUE) ? false : true;
-	}
-
-	BOOL SetTitle(LPCWSTR wpText)
-	{
-		return ::SetConsoleTitleW(wpText);
-	}
-
-	BOOL Write(LPCSTR cpText, DWORD nCharsToWrite)
-	{
-		DWORD written = 0;
-		return ::WriteConsoleA(sg_hOutputHandle, cpText, nCharsToWrite, &written, NULL);
-	}
-
-	BOOL Write(LPCWSTR wpText, DWORD nCharsToWrite)
-	{
-		DWORD written = 0;
-		return ::WriteConsoleW(sg_hOutputHandle, wpText, nCharsToWrite, &written, NULL);
-	}
-
-	BOOL Read(LPSTR cpBuffer, DWORD nCharsToRead)
-	{
-		DWORD read = 0;
-		return ::ReadConsoleA(sg_hInputHandle, cpBuffer, nCharsToRead, &read, NULL);
-	}
-
-	BOOL Read(LPWSTR wpBuffer, DWORD nCharsToRead)
-	{
-		DWORD read = 0;
-		return ::ReadConsoleW(sg_hInputHandle, wpBuffer, nCharsToRead, &read, NULL);
-	}
-
-	BOOL Write(StrView msStr)
-	{
-		return Write(msStr.Data(), msStr.Size());
-	}
-
-	BOOL Write(WStrView wsStr)
-	{
-		return Write(wsStr.Data(), wsStr.Size());
-	}
-
-	VOID ClearInput()
-	{
-		DWORD read = 0;
-		DWORD buffer = 0;
-
-		while (true)
-		{
-			::ReadConsoleW(sg_hInputHandle, &buffer, 1, &read, NULL);
-			if (buffer != L'\r') { continue; }
-			::ReadConsoleW(sg_hInputHandle, &buffer, 1, &read, NULL);
-			if (buffer != L'\n') { continue; }
-			return;
-		}
-	}
-
-	VOID Wait()
-	{
-		wchar_t buffer[1];
-		RxLite::Cmd::Read(buffer, 1);
-	}
-
-	BOOL PutFormat(LPCSTR cpFormat, ...)
-	{
-		char buffer[PUT_BUFFER_MAX];
-
-		va_list args = nullptr;
-		va_start(args, cpFormat);
-		size_t cch = ::wvsprintfA(buffer, cpFormat, args);
-		va_end(args);
-
-		return (cch <= 0) ? (false) : (Write(buffer, cch));
-	}
-
-	BOOL PutFormat(LPCWSTR wpFormat, ...)
-	{
-		wchar_t buffer[PUT_BUFFER_MAX];
-
-		va_list args = nullptr;
-		va_start(args, wpFormat);
-		size_t cch = ::wvsprintfW(buffer, wpFormat, args);
-		va_end(args);
-
-		return (cch <= 0) ? (false) : (Write(buffer, cch));
-	}
-}
-
 namespace RxLite
 {
 	LPVOID SysMemAlloc(LPVOID pAddress, SIZE_T nSize, DWORD uiType, DWORD uiAccess)
@@ -265,6 +165,132 @@ namespace RxLite
 
 namespace RxLite
 {
+	class Cmd
+	{
+	private:
+		HANDLE m_hInput;
+		HANDLE m_hOutput;
+		LPVOID m_pBuffer;
+
+	public:
+		Cmd(SIZE_T nBufferSize = 2048)
+		{
+			this->Init(nBufferSize);
+		};
+
+		Cmd(LPCWSTR wpTitle, SIZE_T nBufferSize = 2048)
+		{
+			this->Init(nBufferSize);
+			this->SetTitle(wpTitle);
+		};
+
+		~Cmd()
+		{
+			::FreeConsole();
+			SysMemFree(m_pBuffer, 0, MEM_RELEASE);
+			m_hInput = NULL;
+			m_hOutput = NULL;
+			m_pBuffer = NULL;
+		};
+
+		VOID Init(SIZE_T nBufferSize)
+		{
+			::AllocConsole();
+			::AttachConsole(ATTACH_PARENT_PROCESS);
+			m_hInput = ::GetStdHandle(STD_INPUT_HANDLE);
+			m_hOutput = ::GetStdHandle(STD_OUTPUT_HANDLE);
+			m_pBuffer = SysMemAlloc(NULL, nBufferSize, MEM_COMMIT, PAGE_READWRITE);
+		}
+
+		BOOL SetTitle(LPCWSTR wpText)
+		{
+			return ::SetConsoleTitleW(wpText);
+		}
+
+		BOOL Write(LPCSTR cpText, DWORD nCharsToWrite)
+		{
+			DWORD written = 0;
+			return ::WriteConsoleA(m_hOutput, cpText, nCharsToWrite, &written, NULL);
+		}
+
+		BOOL Write(LPCWSTR wpText, DWORD nCharsToWrite)
+		{
+			DWORD written = 0;
+			return ::WriteConsoleW(m_hOutput, wpText, nCharsToWrite, &written, NULL);
+		}
+
+		BOOL Read(LPSTR cpBuffer, DWORD nCharsToRead)
+		{
+			DWORD read = 0;
+			return ::ReadConsoleA(m_hInput, cpBuffer, nCharsToRead, &read, NULL);
+		}
+
+		BOOL Read(LPWSTR wpBuffer, DWORD nCharsToRead)
+		{
+			DWORD read = 0;
+			return ::ReadConsoleW(m_hInput, wpBuffer, nCharsToRead, &read, NULL);
+		}
+
+		BOOL Write(StrView msStr)
+		{
+			return Write(msStr.Data(), msStr.Size());
+		}
+
+		BOOL Write(WStrView wsStr)
+		{
+			return Write(wsStr.Data(), wsStr.Size());
+		}
+
+		VOID ClearInput()
+		{
+			DWORD read = 0;
+			DWORD buffer = 0;
+
+			while (true)
+			{
+				::ReadConsoleW(m_hInput, &buffer, 1, &read, NULL);
+				if (buffer != L'\r') { continue; }
+				::ReadConsoleW(m_hInput, &buffer, 1, &read, NULL);
+				if (buffer != L'\n') { continue; }
+				return;
+			}
+		}
+
+		VOID Wait()
+		{
+			wchar_t buffer[1];
+			this->Read(buffer, 1);
+		}
+
+		BOOL PutFormat(LPCSTR cpFormat, ...)
+		{
+			char* buffer = (char*)m_pBuffer;
+
+			va_list args = nullptr;
+			va_start(args, cpFormat);
+			size_t cch = ::wvsprintfA(buffer, cpFormat, args);
+			va_end(args);
+
+			return (cch <= 0) ? (false) : (Write(buffer, cch));
+		}
+
+		BOOL PutFormat(LPCWSTR wpFormat, ...)
+		{
+			wchar_t* buffer = (wchar_t*)m_pBuffer;
+
+			va_list args = nullptr;
+			va_start(args, wpFormat);
+			size_t cch = ::wvsprintfW(buffer, wpFormat, args);
+			va_end(args);
+
+			return (cch <= 0) ? (false) : (Write(buffer, cch));
+		}
+
+	};
+}
+
+namespace RxLite
+{
 	class Auto
 	{
 	public:
@@ -349,7 +375,7 @@ namespace RxLite
 {
 	VOID WriteJmp(PVOID pFunc, PVOID pDest, SIZE_T nCoverSize, BYTE ucAsmCode)
 	{
-		SysMemAccess(pFunc, nCoverSize, PAGE_EXECUTE_READWRITE, NULL, L"RxLit: Access Memory Error!", TRUE);
+		SysMemAccess(pFunc, nCoverSize, PAGE_EXECUTE_READWRITE, NULL, L"RxLite: Access Memory Error!", TRUE);
 		*(PUINT8)((PUINT8)pFunc + 0) = ucAsmCode;
 		*(PDWORD)((PUINT8)pFunc + 1) = (DWORD)pDest - (DWORD)pFunc - 5;
 		(nCoverSize > 0x5) ? (VOID)MemoryXFill((PBYTE)pFunc + 0x5, 0x90, nCoverSize - 0x5) : (VOID)NULL;

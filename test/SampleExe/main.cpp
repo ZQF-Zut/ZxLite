@@ -3,23 +3,22 @@
 
 DWORD Start()
 {
-	RLite::Cmd::Alloc();
-	RLite::Cmd::SetTitle(L"MyConsole");
+	RxLite::Cmd cmd(L"MyConsole");
 
 	wchar_t buffer[1];
 
-	RLite::Cmd::Read(buffer, 1);
-	RLite::Cmd::ClearInput();
-	RLite::Cmd::Write(buffer, 1);
-	RLite::Cmd::Write(L"\n", 1);
+	cmd.Read(buffer, 1);
+	cmd.ClearInput();
+	cmd.Write(buffer, 1);
+	cmd.Write(L"\n", 1);
 
-	RLite::Cmd::Read(buffer, 1);
-	RLite::Cmd::ClearInput();
-	RLite::Cmd::Write(buffer, 2);
-	RLite::Cmd::Write(L"\n", 1);
+	cmd.Read(buffer, 1);
+	cmd.ClearInput();
+	cmd.Write(buffer, 2);
+	cmd.Write(L"\n", 1);
 
-	RLite::Cmd::PutFormat(L"%s-%s\n", L"txt", L"exe");
+	cmd.PutFormat(L"%s-%s\n", L"txt", L"exe");
 
-	RLite::Cmd::Wait();
+	cmd.Wait();
 	return 0;
 }
