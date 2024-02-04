@@ -11,11 +11,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Set Library
 add_library("${PROJECT_NAME}" "src/RxLite/RxLite.cpp")
 target_include_directories("${PROJECT_NAME}" INTERFACE "src/")
-target_link_options("${PROJECT_NAME}" INTERFACE "$<$<CXX_COMPILER_ID:MSVC>:/MANIFEST:NO>")
-target_compile_options("${PROJECT_NAME}" INTERFACE "$<$<CXX_COMPILER_ID:MSVC>:/GS->")
-target_compile_options("${PROJECT_NAME}" INTERFACE "$<$<CXX_COMPILER_ID:MSVC>:/GR->")
 
-if(NOT USER_CONFIG_BUILD_TEST)
+if(NOT USER_CONFIG_RXLITE_BUILD_TEST)
     return()
 endif()
 

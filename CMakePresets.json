@@ -10,7 +10,7 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "cl.exe",
                 "CMAKE_CXX_COMPILER": "cl.exe",
-                "USER_CONFIG_BUILD_TEST": {
+                "USER_CONFIG_RXLITE_BUILD_TEST": {
                     "type": "BOOL",
                     "value": "ON"
                 }
