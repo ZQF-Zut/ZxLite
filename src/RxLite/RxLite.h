@@ -1,8 +1,51 @@
 #include <Windows.h>
 
 
-namespace RLite
+namespace RxLite
 {
+	VOID SysErrorMsgBox(LPCWSTR wpMsg, BOOL isExit)
+	{
+		::MessageBoxW(NULL, wpMsg, NULL, NULL);
+		isExit ? (::ExitProcess(-1)) : ((VOID)NULL);
+	}
+
+	VOID SysErrorMsgBox(LPCSTR cpMsg, BOOL isExit)
+	{
+		::MessageBoxA(NULL, cpMsg, NULL, NULL);
+		isExit ? (::ExitProcess(-1)) : ((VOID)NULL);
+	}
+}
+
+namespace RxLite
+{
+	PVOID MemoryXCopy(PVOID pDst, PVOID pSrc, SIZE_T nSize)
+	{
+		return ::memcpy(pDst, pSrc, nSize);
+	}
+
+	PVOID MemoryXFill(PVOID pDst, BYTE bValue, SIZE_T nSize)
+	{
+		PBYTE dst_ptr = (PBYTE)pDst;
+		while (nSize--)
+		{
+			__asm nop;
+			*dst_ptr = bValue;
+			dst_ptr++;
+		}
+		return dst_ptr;
+	}
+
+	SIZE_T StrCpy(LPSTR pBuffer, LPCSTR cpStr2)
+	{
+		PBYTE str_ptr = (PBYTE)cpStr2;
+		while (*str_ptr)
+		{
+			*pBuffer++ = *str_ptr++;
+		}
+		*pBuffer = 0;
+		return str_ptr - (PBYTE)cpStr2;
+	}
+
 	class StrView
 	{
 	public:
@@ -28,7 +71,7 @@ namespace RLite
 	};
 }
 
-namespace RLite::Cmd
+namespace RxLite::Cmd
 {
 	static constexpr size_t PUT_BUFFER_MAX = 1024;
 	static HANDLE sg_hInputHandle = INVALID_HANDLE_VALUE;
@@ -100,7 +143,7 @@ namespace RLite::Cmd
 	VOID Wait()
 	{
 		wchar_t buffer[1];
-		RLite::Cmd::Read(buffer, 1);
+		RxLite::Cmd::Read(buffer, 1);
 	}
 
 	BOOL PutFormat(LPCSTR cpFormat, ...)
@@ -128,25 +171,104 @@ namespace RLite::Cmd
 	}
 }
 
-namespace RLite::SysMem
+namespace RxLite
 {
-	template<class T> T Alloc(SIZE_T nSize, DWORD uiAccess = PAGE_READWRITE)
+	LPVOID SysMemAlloc(LPVOID pAddress, SIZE_T nSize, DWORD uiType, DWORD uiAccess)
 	{
-		return (T)::VirtualAlloc(NULL, nSize, MEM_COMMIT, uiAccess);
+		return ::VirtualAlloc(pAddress, nSize, uiType, uiAccess);
 	}
 
-	template<class T> BOOL Free(T pAddress)
+	_When_(((dwFreeType& (MEM_RELEASE | MEM_DECOMMIT))) == (MEM_RELEASE | MEM_DECOMMIT),
+		__drv_reportError("Passing both MEM_RELEASE and MEM_DECOMMIT to VirtualFree is not allowed. This results in the failure of this call"))
+
+		_When_(dwFreeType == 0,
+			__drv_reportError("Passing zero as the dwFreeType parameter to VirtualFree is not allowed. This results in the failure of this call"))
+
+		_When_(((dwFreeType& MEM_RELEASE)) != 0 && dwSize != 0,
+			__drv_reportError("Passing MEM_RELEASE and a non-zero dwSize parameter to VirtualFree is not allowed. This results in the failure of this call"))
+		_Success_(return != FALSE)
+		BOOL SysMemFree(_Pre_notnull_ _When_(dwFreeType == MEM_DECOMMIT, _Post_invalid_) _When_(dwFreeType == MEM_RELEASE, _Post_ptr_invalid_) LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType)
 	{
-		return ::VirtualFree((T)pAddress, 0, MEM_RELEASE);
+		return ::VirtualFree(lpAddress, dwSize, dwFreeType);
 	}
+
+	PVOID SysMemAlloc(PVOID pAddress, SIZE_T nSize, DWORD uiType, DWORD uiAccess, LPCWSTR wpErrorMsg, BOOL isExit)
+	{
+		PVOID buffer_ptr = SysMemAlloc(pAddress, nSize, uiType, uiAccess);
+		if (buffer_ptr == NULL) { SysErrorMsgBox(wpErrorMsg, isExit); }
+		return buffer_ptr;
+	}
+
+	BOOL SysMemAccess(PVOID pAddress, SIZE_T nSize, DWORD uiAccess, PDWORD pOldAccess)
+	{
+		DWORD old = 0;
+		return ::VirtualProtect(pAddress, nSize, uiAccess, &old) ? (BOOL)(pOldAccess ? (*pOldAccess = old) : (TRUE)) : FALSE;
+	}
+
+	VOID SysMemAccess(PVOID pAddress, SIZE_T nSize, DWORD uiAccess, PDWORD pOldAccess, LPCWSTR wpErrorMsg, BOOL isExit)
+	{
+		SysMemAccess(pAddress, nSize, uiAccess, pOldAccess) ? (VOID)NULL : SysErrorMsgBox(wpErrorMsg, isExit);
+	}
+
+	BOOL SysMemFill(PVOID pDst, BYTE ucValue, SIZE_T nSize)
+	{
+		return SysMemAccess(pDst, nSize, PAGE_EXECUTE_READWRITE, NULL) ? (BOOL)MemoryXFill(pDst, ucValue, nSize) : (BOOL)FALSE;
+	}
+
+	VOID SysMemFill(PVOID pAddress, BYTE ucValue, SIZE_T nSize, LPWSTR wpErrorMsg, BOOL isExit)
+	{
+		SysMemFill(pAddress, ucValue, nSize) ? (VOID)NULL : SysErrorMsgBox(wpErrorMsg, isExit);
+	}
+
+	BOOL SysMemCopy(PVOID pDst, PVOID pSrc, SIZE_T nSize)
+	{
+		return SysMemAccess(pSrc, nSize, PAGE_EXECUTE_READWRITE, NULL) ? (BOOL)MemoryXCopy(pDst, pSrc, nSize) : (BOOL)FALSE;
+	}
+
+	VOID SysMemCopy(PVOID pDst, PVOID pSrc, SIZE_T nSize, LPWSTR wpErrorMsg, BOOL isExit)
+	{
+		SysMemCopy(pDst, pSrc, nSize) ? (VOID)NULL : SysErrorMsgBox(wpErrorMsg, isExit);
+	}
+
+
+	PVOID SysMemMemSearch(const PVOID pStartAddress, SIZE_T nMaxSearchSize, const PVOID pMatchData, const SIZE_T nMatchDataBytes, const BOOL isBackward)
+	{
+		PBYTE start_ptr = (PBYTE)pStartAddress;
+		if (start_ptr && nMatchDataBytes)
+		{
+			if (isBackward)
+			{
+				for (SIZE_T ite = 0; ite < nMaxSearchSize; ite++)
+				{
+					if (!MemoryXCopy(pMatchData, start_ptr--, nMatchDataBytes))
+					{
+						return (start_ptr + 1);
+					}
+				}
+			}
+			else
+			{
+				for (SIZE_T ite = 0; ite < nMaxSearchSize; ite++)
+				{
+					if (!MemoryXCopy(pMatchData, start_ptr++, nMatchDataBytes))
+					{
+						return (start_ptr - 1);
+					}
+				}
+			}
+		}
+
+		return nullptr;
+	}
+
 }
 
-namespace RLite
+namespace RxLite
 {
 	class Auto
 	{
 	public:
-		PBYTE m_pMem;
+		PVOID m_pMem;
 		SIZE_T m_nMemSize;
 		SIZE_T m_nUserSize;
 
@@ -172,7 +294,7 @@ namespace RLite
 	{
 		if (m_pMem != NULL)
 		{
-			SysMem::Free(m_pMem);
+			SysMemFree(m_pMem, 0, MEM_RELEASE);
 			m_pMem = NULL;
 			m_nMemSize = NULL;
 			m_nUserSize = NULL;
@@ -196,16 +318,16 @@ namespace RLite
 	{
 		if (m_nMemSize == 0)
 		{
-			m_pMem = SysMem::Alloc<PBYTE>(nNewSize);
+			m_pMem = SysMemAlloc(NULL, nNewSize, MEM_COMMIT, PAGE_READWRITE);
 			m_nMemSize = nNewSize;
 		}
 		else if (nNewSize > m_nMemSize)
 		{
 			if (m_pMem != NULL)
 			{
-				SysMem::Free(m_pMem);
+				SysMemFree(m_pMem, 0, MEM_RELEASE);
 			}
-			m_pMem = SysMem::Alloc<PBYTE>(nNewSize);
+			m_pMem = SysMemAlloc(NULL, nNewSize, MEM_COMMIT, PAGE_READWRITE);
 			m_nMemSize = nNewSize;
 		}
 
@@ -220,5 +342,47 @@ namespace RLite
 	template<class T> constexpr T Auto::GetSize() const noexcept
 	{
 		return reinterpret_cast<T>(m_nMemSize);
+	}
+}
+
+namespace RxLite
+{
+	VOID WriteJmp(PVOID pFunc, PVOID pDest, SIZE_T nCoverSize, BYTE ucAsmCode)
+	{
+		SysMemAccess(pFunc, nCoverSize, PAGE_EXECUTE_READWRITE, NULL, L"RxLit: Access Memory Error!", TRUE);
+		*(PUINT8)((PUINT8)pFunc + 0) = ucAsmCode;
+		*(PDWORD)((PUINT8)pFunc + 1) = (DWORD)pDest - (DWORD)pFunc - 5;
+		(nCoverSize > 0x5) ? (VOID)MemoryXFill((PBYTE)pFunc + 0x5, 0x90, nCoverSize - 0x5) : (VOID)NULL;
+	}
+
+	PVOID AllocTrampolineFunc(PVOID pFunc, SIZE_T nSize)
+	{
+		DWORD copy_src_func_asm_size = nSize;
+		DWORD trampoline_func_size = copy_src_func_asm_size + 5;
+		PVOID tpl_func_buffer = SysMemAlloc(NULL, trampoline_func_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+		if (tpl_func_buffer)
+		{
+			if (MemoryXCopy(tpl_func_buffer, pFunc, copy_src_func_asm_size))
+			{
+				WriteJmp((PBYTE)tpl_func_buffer + copy_src_func_asm_size, (PBYTE)pFunc + copy_src_func_asm_size, 5, 0xE9);
+				return tpl_func_buffer;
+			}
+		}
+		return NULL;
+	}
+
+	BOOL FreeTrampolineFunc(PVOID ppFunc)
+	{
+		PVOID* fn_tpl_pp = (PVOID*)ppFunc;
+		PVOID fn_tpl = *fn_tpl_pp;
+		return SysMemFree(fn_tpl, 0, MEM_RELEASE);
+	}
+
+	VOID TrampolineHook(PVOID ppFunc, SIZE_T nSize, PVOID pDetour)
+	{
+		PVOID* fn_org_pp = (PVOID*)ppFunc;
+		PVOID fn_org = *fn_org_pp;
+		*fn_org_pp = AllocTrampolineFunc(fn_org, nSize);
+		WriteJmp(fn_org, pDetour, nSize, 0xE9);
 	}
 }
