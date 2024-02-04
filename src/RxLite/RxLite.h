@@ -23,6 +23,11 @@ namespace RxLite
 		return ::memcpy(pDst, pSrc, nSize);
 	}
 
+	INT MemoryXCmp(const PVOID pDst, const PVOID pSrc, SIZE_T nSize)
+	{
+		return ::memcmp(pDst, pSrc, nSize);
+	}
+
 	PVOID MemoryXFill(PVOID pDst, BYTE bValue, SIZE_T nSize)
 	{
 		PBYTE dst_ptr = (PBYTE)pDst;
@@ -131,7 +136,7 @@ namespace RxLite
 			{
 				for (SIZE_T ite = 0; ite < nMaxSearchSize; ite++)
 				{
-					if (!MemoryXCopy(pMatchData, start_ptr--, nMatchDataBytes))
+					if (!MemoryXCmp(pMatchData, start_ptr--, nMatchDataBytes))
 					{
 						return (start_ptr + 1);
 					}
@@ -141,7 +146,7 @@ namespace RxLite
 			{
 				for (SIZE_T ite = 0; ite < nMaxSearchSize; ite++)
 				{
-					if (!MemoryXCopy(pMatchData, start_ptr++, nMatchDataBytes))
+					if (!MemoryXCmp(pMatchData, start_ptr++, nMatchDataBytes))
 					{
 						return (start_ptr - 1);
 					}
