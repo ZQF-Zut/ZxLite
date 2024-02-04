@@ -53,7 +53,7 @@ namespace RxLite
 		SIZE_T m_nLen;
 
 		constexpr StrView() noexcept : m_cpStr(NULL), m_nLen(NULL) {};
-		template<SIZE_T N> constexpr StrView(const char(&aStr) [N]) noexcept : m_cpStr(aStr), m_nLen(N) {};
+		template<SIZE_T N> constexpr StrView(const char(&aStr)[N]) noexcept : m_cpStr(aStr), m_nLen(N) {};
 		constexpr const char* Data() const noexcept { return m_cpStr; }
 		constexpr SIZE_T Size() const noexcept { return m_nLen; }
 	};
@@ -73,28 +73,19 @@ namespace RxLite
 
 namespace RxLite
 {
-	LPVOID SysMemAlloc(LPVOID pAddress, SIZE_T nSize, DWORD uiType, DWORD uiAccess)
+	LPVOID SysMemAlloc(SIZE_T nSize, DWORD uiAccess)
 	{
-		return ::VirtualAlloc(pAddress, nSize, uiType, uiAccess);
+		return ::VirtualAlloc(NULL, nSize, MEM_COMMIT, uiAccess);
 	}
 
-	_When_(((dwFreeType& (MEM_RELEASE | MEM_DECOMMIT))) == (MEM_RELEASE | MEM_DECOMMIT),
-		__drv_reportError("Passing both MEM_RELEASE and MEM_DECOMMIT to VirtualFree is not allowed. This results in the failure of this call"))
-
-		_When_(dwFreeType == 0,
-			__drv_reportError("Passing zero as the dwFreeType parameter to VirtualFree is not allowed. This results in the failure of this call"))
-
-		_When_(((dwFreeType& MEM_RELEASE)) != 0 && dwSize != 0,
-			__drv_reportError("Passing MEM_RELEASE and a non-zero dwSize parameter to VirtualFree is not allowed. This results in the failure of this call"))
-		_Success_(return != FALSE)
-		BOOL SysMemFree(_Pre_notnull_ _When_(dwFreeType == MEM_DECOMMIT, _Post_invalid_) _When_(dwFreeType == MEM_RELEASE, _Post_ptr_invalid_) LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType)
+	BOOL SysMemFree(LPVOID lpAddress)
 	{
-		return ::VirtualFree(lpAddress, dwSize, dwFreeType);
+		return ::VirtualFree(lpAddress, 0, MEM_RELEASE);
 	}
 
-	PVOID SysMemAlloc(PVOID pAddress, SIZE_T nSize, DWORD uiType, DWORD uiAccess, LPCWSTR wpErrorMsg, BOOL isExit)
+	PVOID SysMemAlloc(SIZE_T nSize, DWORD uiAccess, LPCWSTR wpErrorMsg, BOOL isExit)
 	{
-		PVOID buffer_ptr = SysMemAlloc(pAddress, nSize, uiType, uiAccess);
+		PVOID buffer_ptr = SysMemAlloc(nSize, uiAccess);
 		if (buffer_ptr == NULL) { SysErrorMsgBox(wpErrorMsg, isExit); }
 		return buffer_ptr;
 	}
@@ -187,7 +178,7 @@ namespace RxLite
 		~Cmd()
 		{
 			::FreeConsole();
-			SysMemFree(m_pBuffer, 0, MEM_RELEASE);
+			SysMemFree(m_pBuffer);
 			m_hInput = NULL;
 			m_hOutput = NULL;
 			m_pBuffer = NULL;
@@ -199,7 +190,7 @@ namespace RxLite
 			::AttachConsole(ATTACH_PARENT_PROCESS);
 			m_hInput = ::GetStdHandle(STD_INPUT_HANDLE);
 			m_hOutput = ::GetStdHandle(STD_OUTPUT_HANDLE);
-			m_pBuffer = SysMemAlloc(NULL, nBufferSize, MEM_COMMIT, PAGE_READWRITE);
+			m_pBuffer = SysMemAlloc(nBufferSize, PAGE_READWRITE);
 		}
 
 		BOOL SetTitle(LPCWSTR wpText)
@@ -320,7 +311,7 @@ namespace RxLite
 	{
 		if (m_pMem != NULL)
 		{
-			SysMemFree(m_pMem, 0, MEM_RELEASE);
+			SysMemFree(m_pMem);
 			m_pMem = NULL;
 			m_nMemSize = NULL;
 			m_nUserSize = NULL;
@@ -344,16 +335,16 @@ namespace RxLite
 	{
 		if (m_nMemSize == 0)
 		{
-			m_pMem = SysMemAlloc(NULL, nNewSize, MEM_COMMIT, PAGE_READWRITE);
+			m_pMem = SysMemAlloc(nNewSize, PAGE_READWRITE);
 			m_nMemSize = nNewSize;
 		}
 		else if (nNewSize > m_nMemSize)
 		{
 			if (m_pMem != NULL)
 			{
-				SysMemFree(m_pMem, 0, MEM_RELEASE);
+				SysMemFree(m_pMem);
 			}
-			m_pMem = SysMemAlloc(NULL, nNewSize, MEM_COMMIT, PAGE_READWRITE);
+			m_pMem = SysMemAlloc(nNewSize, PAGE_READWRITE);
 			m_nMemSize = nNewSize;
 		}
 
@@ -385,7 +376,7 @@ namespace RxLite
 	{
 		DWORD copy_src_func_asm_size = nSize;
 		DWORD trampoline_func_size = copy_src_func_asm_size + 5;
-		PVOID tpl_func_buffer = SysMemAlloc(NULL, trampoline_func_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+		PVOID tpl_func_buffer = SysMemAlloc(trampoline_func_size, PAGE_EXECUTE_READWRITE);
 		if (tpl_func_buffer)
 		{
 			if (MemoryXCopy(tpl_func_buffer, pFunc, copy_src_func_asm_size))
@@ -401,7 +392,7 @@ namespace RxLite
 	{
 		PVOID* fn_tpl_pp = (PVOID*)ppFunc;
 		PVOID fn_tpl = *fn_tpl_pp;
-		return SysMemFree(fn_tpl, 0, MEM_RELEASE);
+		return SysMemFree(fn_tpl);
 	}
 
 	VOID TrampolineHook(PVOID ppFunc, SIZE_T nSize, PVOID pDetour)
