@@ -10,10 +10,6 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "cl.exe",
                 "CMAKE_CXX_COMPILER": "cl.exe",
-                "UVAR_RXLITE_BUILD_TEST": {
-                    "type": "BOOL",
-                    "value": "ON"
-                },
                 "UVAR_RXLIRE_NOCRT_GLOBAL": {
                     "type": "BOOL",
                     "value": "ON"

@@ -17,8 +17,8 @@ endif()
 
 
 
-# The Test Conig #
-if(UVAR_RXLITE_BUILD_TEST)
+# The Test Config
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 elseif()
     return()
 endif()
@@ -62,7 +62,7 @@ if(UVAR_IPO_OPTIMIZATION)
     endif()
 endif()
 
-# MSVC Setting
+# MSVC
 if(MSVC)
     # Runtime
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -93,5 +93,5 @@ endif()
 # Include
 include_directories("${ROOT_DIR}")
 
-# Library
+# Subdirectory
 add_subdirectory("test")
