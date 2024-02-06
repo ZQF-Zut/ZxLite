@@ -20,33 +20,31 @@ namespace RxLite
 {
 	PVOID MemoryXCopy(PVOID pDst, PVOID pSrc, SIZE_T nSize)
 	{
-		return ::memcpy(pDst, pSrc, nSize);
+		PBYTE dst = (PBYTE)pDst;
+		PBYTE src = (PBYTE)pSrc;
+		while (nSize--) { *dst++ = *src++; }
+		return pDst;
 	}
 
-	INT MemoryXCmp(const PVOID pDst, const PVOID pSrc, SIZE_T nSize)
+	INT MemoryXCmp(const PVOID pSrc0, const PVOID pSrc1, SIZE_T nSize)
 	{
-		return ::memcmp(pDst, pSrc, nSize);
+		PBYTE s0 = (PBYTE)pSrc0;
+		PBYTE s1 = (PBYTE)pSrc1;
+		while (nSize-- > 0) { if (*s0++ != *s1++) { return s0[-1] < s1[-1] ? -1 : 1; } }
+		return 0;
 	}
 
 	PVOID MemoryXFill(PVOID pDst, BYTE bValue, SIZE_T nSize)
 	{
 		PBYTE dst_ptr = (PBYTE)pDst;
-		while (nSize--)
-		{
-			__asm nop;
-			*dst_ptr = bValue;
-			dst_ptr++;
-		}
+		while (nSize--) { __asm {nop}; *dst_ptr++ = bValue; }
 		return dst_ptr;
 	}
 
 	SIZE_T StrCpy(LPSTR pBuffer, LPCSTR cpStr2)
 	{
 		PBYTE str_ptr = (PBYTE)cpStr2;
-		while (*str_ptr)
-		{
-			*pBuffer++ = *str_ptr++;
-		}
+		while (*str_ptr) { *pBuffer++ = *str_ptr++; }
 		*pBuffer = 0;
 		return str_ptr - (PBYTE)cpStr2;
 	}

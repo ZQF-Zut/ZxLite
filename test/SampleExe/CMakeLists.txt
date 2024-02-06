@@ -1,17 +1,13 @@
 ﻿# Project Name
 project(SampleExe)
 
-# Win32
-set(CMAKE_WIN32_EXECUTABLE ON)
-
-# Cpp Standard
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
 # Current Project
 add_executable("${PROJECT_NAME}" "main.cpp")
+set_target_properties("${PROJECT_NAME}" PROPERTIES WIN32_EXECUTABLE ON)
+target_compile_features("${PROJECT_NAME}" PRIVATE cxx_std_23)
+target_compile_options("${PROJECT_NAME}" PRIVATE "$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+target_compile_options("${PROJECT_NAME}" PRIVATE "$<$<CXX_COMPILER_ID:MSVC>:/GR->")
+target_link_options("${PROJECT_NAME}" PRIVATE "$<$<CXX_COMPILER_ID:MSVC>:/ENTRY:Start>")
 
 # Add Library
 target_link_libraries("${PROJECT_NAME}" PRIVATE RxLite)
-target_link_options("${PROJECT_NAME}" PRIVATE "$<$<CXX_COMPILER_ID:MSVC>:/ENTRY:Start>")
-
