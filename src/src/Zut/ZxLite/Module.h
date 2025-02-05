@@ -31,6 +31,15 @@ namespace ZQF::Zut::ZxLite
             return ZxLite::WStrView::FromRtlStr(m_pLDRDataEntry->FullDllName);
         }
 
+        auto GetExportFn(const ZxLite::StrView wsFnName) const -> void*
+        {
+            auto fn_name_rtlstr{ wsFnName.GetRtlStr() };
+
+            PVOID fn_addr;
+            const auto status = ::LdrGetProcedureAddressForCaller(this->ImageBase(), &fn_name_rtlstr, 0, &fn_addr, 0, nullptr);
+            return status == STATUS_SUCCESS ? fn_addr : nullptr;
+        }
+
         operator bool() const
         {
             return m_pLDRDataEntry != nullptr;
