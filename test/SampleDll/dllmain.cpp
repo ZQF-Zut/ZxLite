@@ -1,7 +1,7 @@
-﻿#include <RxLite/RxLite.h>
+﻿#include <Windows.h>
 
 
-BOOL APIENTRY DllEntryPoint(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
+BOOL APIENTRY DllEntryPoint(HINSTANCE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpReserved*/)
 {
     switch (fdwReason)
     {

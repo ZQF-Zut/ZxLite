@@ -1,8 +1,8 @@
-﻿{
+{
     "version": 3,
     "configurePresets": [
         {
-            "name": "windows-base",
+            "name": "windows-msvc-base",
             "hidden": true,
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/.build/${presetName}",
@@ -10,10 +10,7 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "cl.exe",
                 "CMAKE_CXX_COMPILER": "cl.exe",
-                "UVAR_RXLIRE_NOCRT_GLOBAL": {
-                    "type": "BOOL",
-                    "value": "ON"
-                }
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "TRUE"
             },
             "condition": {
                 "type": "equals",
@@ -22,9 +19,9 @@
             }
         },
         {
-            "name": "x64-debug",
-            "displayName": "x64 Debug",
-            "inherits": "windows-base",
+            "name": "msvc-x64-debug",
+            "displayName": "MSVC x64 Debug",
+            "inherits": "windows-msvc-base",
             "architecture": {
                 "value": "x64",
                 "strategy": "external"
@@ -34,17 +31,33 @@
             }
         },
         {
-            "name": "x64-release",
-            "displayName": "x64 Release",
-            "inherits": "x64-debug",
+            "name": "msvc-x64-release",
+            "displayName": "MSVC x64 Release",
+            "inherits": "msvc-x64-debug",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
         {
-            "name": "x86-debug",
-            "displayName": "x86 Debug",
-            "inherits": "windows-base",
+            "name": "msvc-x64-minsizerel",
+            "displayName": "MSVC x64 MinSizeRel",
+            "inherits": "msvc-x64-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel"
+            }
+        },
+        {
+            "name": "msvc-x64-relwithdebinfo",
+            "displayName": "MSVC x64 RelWithDebInfo",
+            "inherits": "msvc-x64-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "msvc-x86-debug",
+            "displayName": "MSVC x86 Debug",
+            "inherits": "windows-msvc-base",
             "architecture": {
                 "value": "x86",
                 "strategy": "external"
@@ -54,25 +67,25 @@
             }
         },
         {
-            "name": "x86-release",
-            "displayName": "x86 Release",
-            "inherits": "x86-debug",
+            "name": "msvc-x86-release",
+            "displayName": "MSVC x86 Release",
+            "inherits": "msvc-x86-debug",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
         {
-            "name": "x86-MinSizeRel",
-            "displayName": "x86 MinSizeRel",
-            "inherits": "x86-debug",
+            "name": "msvc-x86-minsizerel",
+            "displayName": "MSVC x86 MinSizeRel",
+            "inherits": "msvc-x86-debug",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "MinSizeRel"
             }
         },
         {
-            "name": "x86-RelWithDebInfo",
-            "displayName": "x86 RelWithDebInfo",
-            "inherits": "x86-debug",
+            "name": "msvc-x86-relwithdebinfo",
+            "displayName": "MSVC x86 RelWithDebInfo",
+            "inherits": "msvc-x86-debug",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
