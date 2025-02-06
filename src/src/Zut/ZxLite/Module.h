@@ -1,5 +1,5 @@
 #pragma once
-#include <Zut/ZxLite/StrView.h>
+#include <Zut/ZxLite/String.h>
 
 
 namespace ZQF::Zut::ZxLite
@@ -31,12 +31,12 @@ namespace ZQF::Zut::ZxLite
             return ZxLite::WStrView::FromRtlStr(m_pLDRDataEntry->FullDllName);
         }
 
-        auto GetExportFn(const ZxLite::StrView wsFnName) const -> void*
+        auto GetProcedure(const ZxLite::StrView wsFnName) const -> void*
         {
             auto fn_name_rtlstr{ wsFnName.GetRtlStr() };
 
             PVOID fn_addr;
-            const auto status = ::LdrGetProcedureAddressForCaller(this->ImageBase(), &fn_name_rtlstr, 0, &fn_addr, 0, nullptr);
+            const auto status = ::LdrGetProcedureAddress(this->ImageBase(), &fn_name_rtlstr, 0, &fn_addr);
             return status == STATUS_SUCCESS ? fn_addr : nullptr;
         }
 

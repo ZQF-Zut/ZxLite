@@ -11,7 +11,7 @@ list(APPEND "${PROJECT_NAME}_SRC_FILE"
     "src/Zut/ZxLite/MsgBox.cpp"
     "src/Zut/ZxLite/Module.cpp"
     "src/Zut/ZxLite/Injector.cpp"
-    "src/Zut/ZxLite/StrView.cpp")
+    "src/Zut/ZxLite/String.cpp")
 
 # Set Library
 add_library("${PROJECT_NAME}" "${${PROJECT_NAME}_SRC_FILE}")

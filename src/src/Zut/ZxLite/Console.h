@@ -1,10 +1,11 @@
 #pragma once
-#include <Zut/ZxLite/StrView.h>
+#include <cstddef>
+#include <Zut/ZxLite/String.h>
 
 
 namespace ZQF::Zut::ZxLite
 {
-    auto PutConsole(void* pData, const size_t nBytes) -> void;
+    auto PutConsole(void* pData, const std::size_t nBytes) -> void;
 
     template<typename T>
     static auto PutConsole(const BaseStrView<T> tStr) -> void

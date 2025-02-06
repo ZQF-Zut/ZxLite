@@ -1,6 +1,6 @@
 #pragma once
 #include <Windows.h>
-#include <Zut/ZxLite/StrView.h>
+#include <Zut/ZxLite/String.h>
 
 
 namespace ZQF::Zut::ZxLite
@@ -8,7 +8,8 @@ namespace ZQF::Zut::ZxLite
 	class Injector
 	{
 	private:
-		PROCESS_INFORMATION m_ProcessInfo{ };
+		HANDLE m_hThread{};
+		HANDLE m_hProcess{};
 
 	public:
 		Injector();
