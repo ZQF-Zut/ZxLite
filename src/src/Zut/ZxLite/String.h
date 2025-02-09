@@ -145,115 +145,107 @@ namespace ZQF::Zut::ZxLite
 		return NumToStrImp(spBuffer, reinterpret_cast<std::size_t>(tValue), nBase);
 	}
 
+	auto CharUp(const char cChar) -> char;
 	auto CharUp(const wchar_t wChar) -> wchar_t;
 	auto StrCmp(const UNICODE_STRING& rfUStr0, const UNICODE_STRING& rfUStr1, const bool isIgnoreCase) -> std::size_t;
 
 	template<typename T>
-	class FNV1a
+	auto StrCmp(const T* pStr0, const std::size_t nStr0Len, const T* pStr1, const std::size_t nStr1Len, const bool isIgnoreCase = false) -> std::size_t
 	{
-	private:
-		template<typename T>
-		struct FNV1a_Seed {};
+		auto bytes = (nStr0Len > nStr1Len ? nStr1Len : nStr0Len) / sizeof(T);
 
-		template<>
-		struct FNV1a_Seed<std::uint32_t>
+		std::size_t ret{};
+		if (isIgnoreCase)
 		{
-			inline static constexpr std::uint32_t Prime = 16777619U;
-			inline static constexpr std::uint32_t Seed = 2166136261U;
-		};
-
-		template<>
-		struct FNV1a_Seed<std::uint64_t>
+			while ((ret == 0) && (bytes--))
+			{
+				ret = ZxLite::CharUp(*pStr0++) - ZxLite::CharUp(*pStr1++);
+			}
+		}
+		else
 		{
-			inline static constexpr std::uint64_t Prime = 1099511628211ULL;
-			inline static constexpr std::uint64_t Seed = 14695981039346656037ULL;
-		};
-
-	public:
-		template<typename U>
-		static constexpr auto Hash(const U tValue, const T nHash = FNV1a_Seed<T>::Seed) -> T
-		{
-			T hash = nHash;
-			if constexpr (std::is_same_v<U, std::uint8_t>)
+			while ((ret == 0) && (bytes--))
 			{
-				hash = (tValue ^ hash) * FNV1a_Seed<T>::Prime;
+				ret = *pStr0++ - *pStr1++;
 			}
-			else if constexpr (std::is_same_v<U, std::uint16_t>)
-			{
-				hash = FNV1a::Hash<std::uint8_t>(static_cast<std::uint8_t>((tValue >> 0) & 0xFF), hash);
-				hash = FNV1a::Hash<std::uint8_t>(static_cast<std::uint8_t>((tValue >> 8) & 0xFF), hash);
-			}
-			else if constexpr (std::is_same_v<U, std::uint32_t>)
-			{
-				hash = FNV1a::Hash<std::uint8_t>(static_cast<std::uint8_t>((tValue >> 0) & 0xFF), hash);
-				hash = FNV1a::Hash<std::uint8_t>(static_cast<std::uint8_t>((tValue >> 8) & 0xFF), hash);
-				hash = FNV1a::Hash<std::uint8_t>(static_cast<std::uint8_t>((tValue >> 16) & 0xFF), hash);
-				hash = FNV1a::Hash<std::uint8_t>(static_cast<std::uint8_t>((tValue >> 24) & 0xFF), hash);
-			}
-			else
-			{
-				static_assert(false, "error type");
-			}
-
-			return hash;
 		}
 
-		template<typename U>
-		static constexpr auto HashCStr(const U* pText) -> T
+		if (ret == 0)
 		{
-			T hash = FNV1a_Seed<T>::Seed;
-			while (*pText)
-			{
-				if constexpr (sizeof(U) == 1)
-				{
-					hash = FNV1a::Hash<std::uint8_t>(*pText++, hash);
-				}
-				else if constexpr (sizeof(U) == 2)
-				{
-					hash = FNV1a::Hash<std::uint16_t>(*pText++, hash);
-				}
-				else if constexpr (sizeof(U) == 4)
-				{
-					hash = FNV1a::Hash<std::uint32_t>(*pText++, hash);
-				}
-				else
-				{
-					static_assert(false, "error type");
-				}
-			}
-			return hash;
+			ret = nStr0Len - nStr1Len;
 		}
 
-		template<typename U>
-		static constexpr auto HashMemory(const U* pText, const std::size_t nSize) -> T
+		return ret;
+	}
+
+	template<typename T>
+	auto StrCmp(const T* pStr0, const T* pStr1, const bool isIgnoreCase = false) -> std::size_t
+	{
+		std::size_t ret{ SIZE_MAX };
+
+		if (pStr0 == nullptr || pStr1 == nullptr)
 		{
-			T hash = FNV1a_Seed<T>::Seed;
-			for (std::size_t idx = 0; idx < nSize; idx++)
-			{
-				if constexpr (sizeof(U) == 1)
-				{
-					hash = FNV1a::Hash<std::uint8_t>(pText[idx], hash);
-				}
-				else if constexpr (sizeof(U) == 2)
-				{
-					hash = FNV1a::Hash<std::uint16_t>(pText[idx], hash);
-				}
-				else if constexpr (sizeof(U) == 4)
-				{
-					hash = FNV1a::Hash<std::uint32_t>(pText[idx], hash);
-				}
-				else
-				{
-					static_assert(false, "error type");
-				}
-			}
-			return hash;
+			return ret;
 		}
 
-		template<typename U, std::size_t N>
-		static consteval auto HashCStrArray(const U(&aText)[N]) -> T
+		if (isIgnoreCase)
 		{
-			return FNV1a::HashMemory(aText, N - 1);
+			for (std::size_t idx = 0; ; idx++)
+			{
+				const auto char_0 = pStr0[idx];
+				if (char_0 == 0)
+				{
+					break;
+				}
+
+				const auto char_1 = pStr1[idx];
+				if (char_1 == 0)
+				{
+					break;
+				}
+
+				ret = ZxLite::CharUp(char_0) - ZxLite::CharUp(char_1);
+				if (ret != 0)
+				{
+					return static_cast<std::size_t>(ret);
+				}
+			}
 		}
-	};
+		else
+		{
+			for (std::size_t idx = 0; ; idx++)
+			{
+				const auto char_0 = pStr0[idx];
+				if (char_0 == 0)
+				{
+					break;
+				}
+
+				const auto char_1 = pStr1[idx];
+				if (char_1 == 0)
+				{
+					break;
+				}
+
+				ret = char_0 - char_1;
+				if (ret != 0)
+				{
+					return static_cast<std::size_t>(ret);
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	template<typename T>
+	auto StrLen(const T* pStr) -> std::size_t
+	{
+		std::size_t len;
+		for (len = 0; *pStr != 0; ++pStr)
+		{
+			++len;
+		}
+		return len;
+	}
 }

@@ -14,7 +14,8 @@ BOOL APIENTRY DllEntryPoint(HINSTANCE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lp
         ZQF::Zut::ZxLite::OpenModule kernel32_module{ {kernel32_name, 12 } };
         if (kernel32_module)
         {
-            auto fn = kernel32_module.GetProcedure(ZQF::Zut::ZxLite::FNV1a<std::size_t>::HashCStrArray("CopyFileW"));
+            constexpr auto copy_file_w_cstr_hash = ZQF::Zut::ZxLite::FNV1a<std::size_t>::HashCStrCompileTime("CopyFileW");
+            auto fn = kernel32_module.GetProcedure(copy_file_w_cstr_hash);
             if (fn)
             {
                 reinterpret_cast<decltype(&::CopyFileW)>(fn)(kernel32_name, kernel3x_name, true);

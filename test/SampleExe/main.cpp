@@ -7,8 +7,26 @@
 using namespace ZQF::Zut;
 
 
+static auto TestStrcmp()
+{
+    //auto x0 = ZxLite::FNV1a<std::size_t>::HashCStrCompileTime(L"kernel32.dll");
+    //auto x1 = ZxLite::FNV1a<std::size_t>::HashCStr(L"kernel32.dll");
+    //auto x2 = ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCase(L"keRneL32.dll");
+    //auto x3 = ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCaseCompileTime(L"kernel32.dll");
+    //int a{};
+
+    //constexpr auto str0 = "abcdefg224dgJUGusfs";
+    //constexpr auto str1 = "abcdefg224dgjuGusfs";
+    //const auto compare_status_0 = ZxLite::StrCmp(str0, str0);
+    //const auto compare_status_1 = ZxLite::StrCmp(str0, str1);
+    //const auto compare_status_2 = ZxLite::StrCmp(str0, str1, true);
+    //const auto compare_status_3 = ZxLite::StrCmp(str0, "", true);
+}
+
+
 auto Start() -> size_t
 {
+    TestStrcmp();
     //ZxLite::PutConsole<char>("hello, world!\n");
     //ZxLite::PutConsole<wchar_t>(L"hello, zxlite!\n");
     ZxLite::MsgBox::ShowInfo(L"窗口弹出测试！", L"可以看到窗口吗？");
@@ -33,7 +51,7 @@ auto Start() -> size_t
 
 
 	ZxLite::Injector injector;
-	injector.ViaRemoteThread(LR"(Hash.exe)", LR"(vfseditor.dll)");
+	injector.ViaAPC(LR"(Hash.exe)", LR"(vfseditor.dll)");
 	injector.Resume();
 
 	return 0;

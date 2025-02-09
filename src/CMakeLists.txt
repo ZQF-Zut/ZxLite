@@ -10,6 +10,7 @@ list(APPEND "${PROJECT_NAME}_SRC_FILE"
     "src/Zut/ZxLite/Console.cpp"
     "src/Zut/ZxLite/MsgBox.cpp"
     "src/Zut/ZxLite/Module.cpp"
+    "src/Zut/ZxLite/Hasher.cpp"
     "src/Zut/ZxLite/Injector.cpp"
     "src/Zut/ZxLite/String.cpp")
 

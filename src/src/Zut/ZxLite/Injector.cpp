@@ -18,10 +18,10 @@ namespace ZQF::Zut::ZxLite
 
 	auto Injector::ViaAPC(const ZxLite::WStrView wsExePath, const ZxLite::WStrView wsDllPath) -> bool
 	{
-		ZxLite::OpenModule kernel32_module{ L"kernel32.dll" };
+		ZxLite::OpenModule kernel32_module{ ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCaseCompileTime(L"kernel32.dll") };
 		if (kernel32_module == false) { return false; }
 
-		const auto fn_createprocess_w = reinterpret_cast<decltype(&::CreateProcessW)>(kernel32_module.GetProcedure("CreateProcessW"));
+		const auto fn_createprocess_w = reinterpret_cast<decltype(&::CreateProcessW)>(kernel32_module.GetProcedure(ZxLite::FNV1a<std::size_t>::HashCStrArrayCompileTime("CreateProcessW")));
 		if (fn_createprocess_w == nullptr) { return false; }
 
 		PROCESS_INFORMATION pi{};
@@ -42,7 +42,7 @@ namespace ZQF::Zut::ZxLite
 		const auto status_write_dll_path = ::NtWriteVirtualMemory(m_hProcess, dll_path_buffer_va, (PVOID)wsDllPath.Data(), dll_path_buf_bytes, &written_bytes);
 		if (status_write_dll_path != STATUS_SUCCESS) { return false; }
 
-		const auto fn_load_library_w = kernel32_module.GetProcedure("LoadLibraryW");
+		const auto fn_load_library_w = kernel32_module.GetProcedure(ZxLite::FNV1a<std::size_t>::HashCStrArrayCompileTime("LoadLibraryW"));
 		if (fn_load_library_w == nullptr) { return false; }
 
 		const auto que_apc_status = ::NtQueueApcThread(m_hThread, reinterpret_cast<PPS_APC_ROUTINE>(fn_load_library_w), dll_path_buffer_va, nullptr, nullptr);
@@ -53,10 +53,10 @@ namespace ZQF::Zut::ZxLite
 
 	auto Injector::ViaRemoteThread(const ZxLite::WStrView wsExePath, const ZxLite::WStrView wsDllPath) -> bool
 	{
-		ZxLite::OpenModule kernel32_module{ L"kernel32.dll" };
+		ZxLite::OpenModule kernel32_module{ ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCaseCompileTime(L"kernel32.dll") };
 		if (kernel32_module == false) { return false; }
 
-		const auto fn_createprocess_w = reinterpret_cast<decltype(&::CreateProcessW)>(kernel32_module.GetProcedure("CreateProcessW"));
+		const auto fn_createprocess_w = reinterpret_cast<decltype(&::CreateProcessW)>(kernel32_module.GetProcedure(ZxLite::FNV1a<std::size_t>::HashCStrArrayCompileTime("CreateProcessW")));
 		if (fn_createprocess_w == nullptr) { return false; }
 
 		PROCESS_INFORMATION pi{};
@@ -77,7 +77,7 @@ namespace ZQF::Zut::ZxLite
 		const auto status_write_dll_path = ::NtWriteVirtualMemory(m_hProcess, dll_path_buffer_va, (PVOID)wsDllPath.Data(), dll_path_buf_bytes, &written_bytes);
 		if (status_write_dll_path != STATUS_SUCCESS) { return false; }
 
-		const auto fn_load_library_w = kernel32_module.GetProcedure("LoadLibraryW");
+		const auto fn_load_library_w = kernel32_module.GetProcedure(ZxLite::FNV1a<std::size_t>::HashCStrArrayCompileTime("LoadLibraryW"));
 		if (fn_load_library_w == nullptr) { return false; }
 
 		HANDLE thread_handle{};
