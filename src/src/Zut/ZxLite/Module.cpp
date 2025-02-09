@@ -1,5 +1,6 @@
 #include "Module.h"
 #include "String.h"
+#include "Hasher.h"
 #include <phnt.h>
 
 
@@ -14,7 +15,12 @@ namespace ZQF::Zut::ZxLite
         {
             const auto ldr_entry_ptr = reinterpret_cast<PLDR_DATA_TABLE_ENTRY>(ldr_entry_node_ptr);
             const auto compare_status = ZxLite::StrCmp(ldr_entry_ptr->BaseDllName, target_module_name_ustr, true);
-            if (compare_status == 0) { return ldr_entry_ptr; }
+            if (compare_status != 0) 
+            { 
+                continue;
+            }
+
+            return ldr_entry_ptr;
         }
 
         return nullptr;
@@ -27,7 +33,12 @@ namespace ZQF::Zut::ZxLite
         {
             const auto ldr_entry_ptr = reinterpret_cast<PLDR_DATA_TABLE_ENTRY>(ldr_entry_node_ptr);
             const auto dll_name_hash = ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCase(ldr_entry_ptr->BaseDllName.Buffer, ldr_entry_ptr->BaseDllName.Length / sizeof(WCHAR));
-            if (dll_name_hash == nModuleNameHashUpperCase) { return ldr_entry_ptr; }
+            if (dll_name_hash != nModuleNameHashUpperCase) 
+            {
+                continue;
+            }
+
+            return ldr_entry_ptr;
         }
 
         return nullptr;
@@ -55,10 +66,16 @@ namespace ZQF::Zut::ZxLite
         const auto nt_hdr_ptr = reinterpret_cast<PIMAGE_NT_HEADERS>(image_ptr + dos_hdr_ptr->e_lfanew);
 
         const auto& export_entry = nt_hdr_ptr->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
-        if (!export_entry.VirtualAddress || !export_entry.Size) { return nullptr; }
+        if ((export_entry.VirtualAddress == 0) || (export_entry.Size == 0))
+        { 
+            return nullptr;
+        }
 
         const auto export_dir_ptr = reinterpret_cast<PIMAGE_EXPORT_DIRECTORY>(image_ptr + export_entry.VirtualAddress);
-        if ((export_dir_ptr == nullptr) || (export_dir_ptr->NumberOfNames == 0) || (export_dir_ptr->NumberOfFunctions == 0)) { return nullptr; }
+        if ((export_dir_ptr == nullptr) || (export_dir_ptr->NumberOfNames == 0) || (export_dir_ptr->NumberOfFunctions == 0)) 
+        { 
+            return nullptr;
+        }
 
         const auto name_table_ptr = reinterpret_cast<PDWORD>(image_ptr + export_dir_ptr->AddressOfNames);
         const auto ordinal_table_ptr = reinterpret_cast<PWORD>(image_ptr + export_dir_ptr->AddressOfNameOrdinals);
@@ -68,7 +85,11 @@ namespace ZQF::Zut::ZxLite
         {
             const auto func_name_cstr = reinterpret_cast<PCSTR>(image_ptr + name_table_ptr[idx]);
             const auto func_name_hash = ZxLite::FNV1a<std::size_t>::HashCStr(func_name_cstr);
-            if (nHash != func_name_hash) { continue; }
+            if (nHash != func_name_hash) 
+            { 
+                continue;
+            }
+
             return image_ptr + func_table_ptr[ordinal_table_ptr[idx]];
         }
 
@@ -82,7 +103,10 @@ namespace ZQF::Zut::ZxLite
         const auto nt_hdr_ptr = reinterpret_cast<PIMAGE_NT_HEADERS>(image_ptr + dos_hdr_ptr->e_lfanew);
 
         const auto& export_entry = nt_hdr_ptr->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
-        if (!export_entry.VirtualAddress || !export_entry.Size) { return nullptr; }
+        if ((export_entry.VirtualAddress == 0) || (export_entry.Size == 0))
+        {
+            return nullptr;
+        }
 
         const auto export_dir_ptr = reinterpret_cast<PIMAGE_EXPORT_DIRECTORY>(image_ptr + export_entry.VirtualAddress);
         if ((export_dir_ptr == nullptr) || (export_dir_ptr->NumberOfNames == 0) || (export_dir_ptr->NumberOfFunctions == 0)) { return nullptr; }
@@ -95,8 +119,17 @@ namespace ZQF::Zut::ZxLite
         {
             const auto func_name_cstr = reinterpret_cast<PCSTR>(image_ptr + name_table_ptr[idx]);
             const auto func_name_len = ZxLite::StrLen(func_name_cstr);
-            if (func_name_len != msFnName.SizeBytes()) { continue; }
-            if (ZxLite::StrCmp(msFnName.Data(), msFnName.Size(), func_name_cstr, func_name_len, false) == 0) { continue; }
+            if (func_name_len != msFnName.SizeBytes()) 
+            { 
+                continue;
+            }
+
+            const auto compare_status = ZxLite::StrCmp(msFnName.Data(), msFnName.Size(), func_name_cstr, func_name_len, false);
+            if (compare_status != 0) 
+            {
+                continue;
+            }
+
             return image_ptr + func_table_ptr[ordinal_table_ptr[idx]];
         }
 

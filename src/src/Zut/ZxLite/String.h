@@ -249,3 +249,43 @@ namespace ZQF::Zut::ZxLite
 		return len;
 	}
 }
+
+namespace ZQF::Zut::ZxLite
+{
+	template<typename T, std::size_t N>
+	class InCodeStrInternal
+	{
+	private:
+		T m_aStr[N];
+
+	public:
+		consteval InCodeStrInternal(const T(&aStr)[N]) noexcept
+		{
+			for (std::size_t i = 0; i < N; i++)
+			{
+				m_aStr[i] = aStr[i];
+			}
+		}
+
+		constexpr auto CStr() const noexcept -> const T*
+		{
+			return m_aStr;
+		}
+
+		constexpr auto Size() const noexcept -> std::size_t
+		{
+			return N - 1;
+		}
+
+		constexpr auto SizeBytes() const noexcept -> std::size_t
+		{
+			return this->Size() * sizeof(T);
+		}
+	};
+
+	template<typename T, std::size_t N>
+	consteval static auto InCodeStr(const T(&aStr)[N]) -> InCodeStrInternal<T, N>
+	{
+		return InCodeStrInternal<T, N>{aStr};
+	}
+}

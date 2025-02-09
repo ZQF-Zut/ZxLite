@@ -7,7 +7,9 @@
 using namespace ZQF::Zut;
 
 
-static auto TestStrcmp()
+
+
+[[maybe_unused]] static auto TestStrcmp()
 {
     //auto x0 = ZxLite::FNV1a<std::size_t>::HashCStrCompileTime(L"kernel32.dll");
     //auto x1 = ZxLite::FNV1a<std::size_t>::HashCStr(L"kernel32.dll");
@@ -26,10 +28,12 @@ static auto TestStrcmp()
 
 auto Start() -> size_t
 {
-    TestStrcmp();
+    // TestStrcmp();
     //ZxLite::PutConsole<char>("hello, world!\n");
     //ZxLite::PutConsole<wchar_t>(L"hello, zxlite!\n");
-    ZxLite::MsgBox::ShowInfo(L"窗口弹出测试！", L"可以看到窗口吗？");
+    const auto str0 = ZxLite::InCodeStr(L"窗口弹出测试！");
+    const auto str1 = ZxLite::InCodeStr(L"可以看到窗口吗？");
+    ZxLite::MsgBox{}.ShowInfo(str0.CStr(), str1.CStr());
 
     //ZxLite::OpenModule module_ntdll{ L"ntdll.dll" };
     //if (module_ntdll == false)
@@ -50,9 +54,9 @@ auto Start() -> size_t
     //ZxLite::PutConsole<wchar_t>(module_ntdll.ModuleFullPath());
 
 
-	ZxLite::Injector injector;
-	injector.ViaAPC(LR"(Hash.exe)", LR"(vfseditor.dll)");
-	injector.Resume();
+	//ZxLite::Injector injector;
+	//injector.ViaAPC(LR"(Hash.exe)", LR"(vfseditor.dll)");
+	//injector.Resume();
 
 	return 0;
 }

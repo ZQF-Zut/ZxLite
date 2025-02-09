@@ -91,8 +91,14 @@ namespace ZQF::Zut::ZxLite
             static constexpr auto PARAM_COUNT = 4;
         };
 
+    private:
+        void* m_fnNtRaiseHardError{};
+
+    public:
+        MsgBox();
+
 	public:
-		static auto ShowInfo(const ZxLite::WStrView wsTitle, const ZxLite::WStrView wsText) -> MsgBox::Respon;
+		auto ShowInfo(const ZxLite::WStrView wsTitle, const ZxLite::WStrView wsText) -> MsgBox::Respon;
 
 	};
 }

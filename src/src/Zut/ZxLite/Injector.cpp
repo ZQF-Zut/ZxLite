@@ -1,6 +1,7 @@
 #include "Injector.h"
+#include "Hasher.h"
+#include "Module.h"
 #include <phnt.h>
-#include <Zut/ZxLite/Module.h>
 
 
 namespace ZQF::Zut::ZxLite

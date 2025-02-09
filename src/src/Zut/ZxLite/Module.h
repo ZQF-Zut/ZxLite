@@ -1,5 +1,4 @@
 #pragma once
-#include <Zut/ZxLite/Hasher.h>
 #include <Zut/ZxLite/String.h>
 
 
