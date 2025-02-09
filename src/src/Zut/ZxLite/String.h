@@ -148,7 +148,6 @@ namespace ZQF::Zut::ZxLite
 	auto CharUp(const wchar_t wChar) -> wchar_t;
 	auto StrCmp(const UNICODE_STRING& rfUStr0, const UNICODE_STRING& rfUStr1, const bool isIgnoreCase) -> std::size_t;
 
-
 	template<typename T>
 	class FNV1a
 	{
@@ -200,20 +199,20 @@ namespace ZQF::Zut::ZxLite
 		}
 
 		template<typename U>
-		static constexpr auto HashStr(const U* pText) -> T
+		static constexpr auto HashCStr(const U* pText) -> T
 		{
 			T hash = FNV1a_Seed<T>::Seed;
 			while (*pText)
 			{
-				if constexpr (sizeof(wchar_t) == 1)
+				if constexpr (sizeof(U) == 1)
 				{
 					hash = FNV1a::Hash<std::uint8_t>(*pText++, hash);
 				}
-				else if constexpr (sizeof(wchar_t) == 2)
+				else if constexpr (sizeof(U) == 2)
 				{
 					hash = FNV1a::Hash<std::uint16_t>(*pText++, hash);
 				}
-				else if constexpr (sizeof(wchar_t) == 4)
+				else if constexpr (sizeof(U) == 4)
 				{
 					hash = FNV1a::Hash<std::uint32_t>(*pText++, hash);
 				}
@@ -226,7 +225,7 @@ namespace ZQF::Zut::ZxLite
 		}
 
 		template<typename U>
-		static constexpr auto HashStr(const U* pText, const std::size_t nSize) -> T
+		static constexpr auto HashMemory(const U* pText, const std::size_t nSize) -> T
 		{
 			T hash = FNV1a_Seed<T>::Seed;
 			for (std::size_t idx = 0; idx < nSize; idx++)
@@ -252,9 +251,9 @@ namespace ZQF::Zut::ZxLite
 		}
 
 		template<typename U, std::size_t N>
-		static consteval auto HashStrConst(const U(&aText)[N]) -> T
+		static consteval auto HashCStrArray(const U(&aText)[N]) -> T
 		{
-			return FNV1a::HashStr(aText, N);
+			return FNV1a::HashMemory(aText, N - 1);
 		}
 	};
 }

@@ -1,5 +1,4 @@
 ﻿#include <phnt.h>
-#include <span>
 #include <Zut/ZxLite/MsgBox.h>
 #include <Zut/ZxLite/Console.h>
 #include <Zut/ZxLite/Module.h>
@@ -32,10 +31,9 @@ auto Start() -> size_t
     //ZxLite::PutConsole<wchar_t>(L"\n\tModuleFullPath:");
     //ZxLite::PutConsole<wchar_t>(module_ntdll.ModuleFullPath());
 
-    
 
 	ZxLite::Injector injector;
-	injector.ViaAPC(LR"(Hash.exe)", LR"(vfseditor.dll)");
+	injector.ViaRemoteThread(LR"(Hash.exe)", LR"(vfseditor.dll)");
 	injector.Resume();
 
 	return 0;

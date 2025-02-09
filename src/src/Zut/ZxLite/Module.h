@@ -31,13 +31,59 @@ namespace ZQF::Zut::ZxLite
             return ZxLite::WStrView::FromRtlStr(m_pLDRDataEntry->FullDllName);
         }
 
-        auto GetProcedure(const ZxLite::StrView wsFnName) const -> void*
+        auto GetProcedure(const std::size_t nHash) const -> void*
         {
-            auto fn_name_rtlstr{ wsFnName.GetRtlStr() };
+            const auto image_ptr = reinterpret_cast<PBYTE>(this->ImageBase());
+            const auto dos_hdr_ptr = reinterpret_cast<PIMAGE_DOS_HEADER>(image_ptr);
+            const auto nt_hdr_ptr = reinterpret_cast<PIMAGE_NT_HEADERS>(image_ptr + dos_hdr_ptr->e_lfanew);
 
-            PVOID fn_addr;
-            const auto status = ::LdrGetProcedureAddress(this->ImageBase(), &fn_name_rtlstr, 0, &fn_addr);
-            return status == STATUS_SUCCESS ? fn_addr : nullptr;
+            const auto& export_entry = nt_hdr_ptr->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
+            if (!export_entry.VirtualAddress || !export_entry.Size) { return nullptr; }
+
+            const auto export_dir_ptr = reinterpret_cast<PIMAGE_EXPORT_DIRECTORY>(image_ptr + export_entry.VirtualAddress);
+            if ((export_dir_ptr == nullptr) || (export_dir_ptr->NumberOfNames == 0) || (export_dir_ptr->NumberOfFunctions == 0)) { return nullptr; }
+
+            const auto name_table_ptr = reinterpret_cast<PDWORD>(image_ptr + export_dir_ptr->AddressOfNames);
+            const auto ordinal_table_ptr = reinterpret_cast<PWORD>(image_ptr + export_dir_ptr->AddressOfNameOrdinals);
+            const auto func_table_ptr = reinterpret_cast<PDWORD>(image_ptr + export_dir_ptr->AddressOfFunctions);
+
+            for (std::size_t idx = 0; idx < export_dir_ptr->NumberOfNames; idx++)
+            {
+                const auto func_name_cstr = reinterpret_cast<PCSTR>(image_ptr + name_table_ptr[idx]);
+                const auto func_name_hash = ZxLite::FNV1a<std::size_t>::HashCStr(func_name_cstr);
+                if (nHash != func_name_hash) { continue; }
+                return image_ptr + func_table_ptr[ordinal_table_ptr[idx]];
+            }
+
+            return nullptr;
+        }
+
+        auto GetProcedure(const ZxLite::StrView msFnName) const -> void*
+        {
+            const auto image_ptr = reinterpret_cast<PBYTE>(this->ImageBase());
+            const auto dos_hdr_ptr = reinterpret_cast<PIMAGE_DOS_HEADER>(image_ptr);
+            const auto nt_hdr_ptr = reinterpret_cast<PIMAGE_NT_HEADERS>(image_ptr + dos_hdr_ptr->e_lfanew);
+
+            const auto& export_entry = nt_hdr_ptr->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
+            if (!export_entry.VirtualAddress || !export_entry.Size) { return nullptr; }
+
+            const auto export_dir_ptr = reinterpret_cast<PIMAGE_EXPORT_DIRECTORY>(image_ptr + export_entry.VirtualAddress);
+            if ((export_dir_ptr == nullptr) || (export_dir_ptr->NumberOfNames == 0) || (export_dir_ptr->NumberOfFunctions == 0)) { return nullptr; }
+
+            const auto name_table_ptr = reinterpret_cast<PDWORD>(image_ptr + export_dir_ptr->AddressOfNames);
+            const auto ordinal_table_ptr = reinterpret_cast<PWORD>(image_ptr + export_dir_ptr->AddressOfNameOrdinals);
+            const auto func_table_ptr = reinterpret_cast<PDWORD>(image_ptr + export_dir_ptr->AddressOfFunctions);
+
+            for (std::size_t idx = 0; idx < export_dir_ptr->NumberOfNames; idx++)
+            {
+                const auto func_name_cstr = reinterpret_cast<PCSTR>(image_ptr + name_table_ptr[idx]);
+                const auto func_name_len = strlen(func_name_cstr);
+                if (func_name_len != msFnName.SizeBytes()) { continue; }
+                if (::strcmp(msFnName.Data(), func_name_cstr) == 0) { continue; }
+                return image_ptr + func_table_ptr[ordinal_table_ptr[idx]];
+            }
+
+            return nullptr;
         }
 
         operator bool() const

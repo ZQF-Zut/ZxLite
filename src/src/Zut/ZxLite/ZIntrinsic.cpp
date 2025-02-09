@@ -52,3 +52,4 @@ extern "C" void* memcpy(void* dest, const void* src, size_t count)
 
 	return dest;
 }
+
