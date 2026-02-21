@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "zqf-zxlite",
+  "version": "1.0",
+  "dependencies": [
+    "zqf-phnt",
+    "zqf-cmake-modules",
+    {
+      "name": "catch2",
+      "version>=": "3.11.0"
+    }
+  ],
+  "vcpkg-configuration": {
+    "default-registry": {
+      "kind": "git",
+      "repository": "https://github.com/Microsoft/vcpkg.git",
+      "baseline": "5d57f5a0a5469a23e005fc79a7c1814ab4fc967e"
+    },
+    "registries": [
+      {
+        "kind": "git",
+        "repository": "https://github.com/Dir-A/Registry.git",
+        "baseline": "9c0dd3620773d982a31600904ef7ab74b37994ff",
+        "packages": [
+          "zqf-*"
+        ]
+      }
+    ]
+  }
+}

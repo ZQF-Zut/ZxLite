@@ -25,4 +25,9 @@ namespace ZQF::Zut::ZxLite
 	{
 		return ZxLite::StrCmp(rfUStr0.Buffer, rfUStr0.Length, rfUStr1.Buffer, rfUStr1.Length, isIgnoreCase);
 	}
+
+    auto MemCpy(void* dest, const void* src, size_t count) -> void*
+    {
+        return ::memcpy(dest, src, count);
+    }
 }

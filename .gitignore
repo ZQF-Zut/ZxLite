@@ -1,14 +1,25 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
-
+# cmake
 /.build
-/.bin
+/.install
+
+# xmake
+.xmake/
+
+# vs
+/vsxmake2022
 /.vs
 
-.vscode/
-.xmake/
-.cache/
-vsxmake*/
+# vscode
+.vscode/.cache/
+.vscode/compile_commands.json
 
-build/
+# .vcpkg
+.vcpkg/
+
+# macos cache
+.DS_Store
+
+# profiles
+.clang-format
+.clangd
+.editorconfig

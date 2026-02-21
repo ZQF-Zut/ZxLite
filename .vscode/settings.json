@@ -1,0 +1,33 @@
+{
+    "[cpp]": {
+        "editor.inlayHints.enabled": "off",
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": false,
+    },
+    "[c]": {
+        "editor.inlayHints.enabled": "off",
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": false,
+    },
+    "search.useIgnoreFiles": false,
+    // lldb
+    "lldb.displayFormat": "hex",
+    // xmake
+    "xmake.debugConfigType": "codelldb",
+    // cmake
+    "cmake.debugConfig": {"type":"lldb"},
+    "cmake.generator": "Ninja",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.options.statusBarVisibility": "icon",
+    "cmake.copyCompileCommands": "${workspaceFolder}/.vscode/compile_commands.json",
+    // clangd
+    "clangd.arguments": [
+        "--background-index",
+        "--clang-tidy",
+        "-j=16",
+        "--compile-commands-dir=${workspaceFolder}/.vscode/",
+         "--header-insertion=never"
+    ],
+    // c_c++
+    "C_Cpp.intelliSenseEngine": "disabled"
+}
