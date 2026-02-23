@@ -8,8 +8,8 @@ namespace ZQF::Zut::ZxLite
 
   Injector::~Injector()
   {
-    NtClose(m_hThread);
-    NtClose(m_hProcess);
+    ::NtClose(m_hThread);
+    ::NtClose(m_hProcess);
   }
 
   auto Injector::ViaAPC(const ZxLite::WStrView wsExePath, const ZxLite::WStrView wsDllPath) -> bool

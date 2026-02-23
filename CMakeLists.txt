@@ -30,6 +30,7 @@ if(ZQF_DEVELOP)
 endif()
 
 # Source
+add_subdirectory("lib")
 add_subdirectory("src")
 
 # Dev

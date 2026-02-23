@@ -20,11 +20,6 @@ zqf_target_warning(${PROJECT_NAME} PRIVATE AllExtra)
 zqf_target_nocrt_flags(${PROJECT_NAME} PRIVATE All)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
 
-# Intrinsic
-add_library(${PROJECT_NAME}_intrinsic STATIC "src/Zut/ZxLite/ZIntrinsic.cpp")
-add_library(Zut::ZxLite::Intrinsic ALIAS ${PROJECT_NAME}_intrinsic)
-zqf_target_nocrt_flags(${PROJECT_NAME}_intrinsic PRIVATE All)
-
 # External Libraries
 find_package(phnt CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC phnt::phnt)

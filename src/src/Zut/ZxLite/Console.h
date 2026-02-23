@@ -1,5 +1,4 @@
 #pragma once
-
 #include <Zut/ZxLite/String.h>
 
 namespace ZQF::Zut::ZxLite

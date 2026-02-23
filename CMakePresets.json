@@ -17,7 +17,6 @@
         "VCPKG_INSTALL_OPTIONS": "--no-print-usage",
         "ZQF_DEVELOP": true,
         "ZQF_TESTING": true,
-        "ZQF_DOXYGEN": true,
         "ZQF_VCPKG": true
       }
     },

@@ -9,15 +9,15 @@ TEST_CASE("string")
 {
   using namespace ZQF::Zut;
 
-  REQUIRE(ZxLite::FNV1a<std::size_t>::HashCStrArray(L"kernel32.dll") == 0x7f1bf8b449d16c2d);
-  REQUIRE(ZxLite::FNV1a<std::size_t>::HashCStrArrayIgnoreCase(L"KerNel32.dll") == 0x7f1bf8b449d16c2d);
-  static_assert(ZxLite::FNV1a<std::size_t>::HashCStrArrayCompileTime(L"kernel32.dll") == 0x7f1bf8b449d16c2d);
-  static_assert(ZxLite::FNV1a<std::size_t>::HashCStrArrayIgnoreCaseCompileTime(L"KerNel32.dll") == 0x7f1bf8b449d16c2d);
+  REQUIRE(ZxLite::FNV1a<std::uint64_t>::HashCStrArray(L"kernel32.dll") == 0x7f1bf8b449d16c2d);
+  REQUIRE(ZxLite::FNV1a<std::uint64_t>::HashCStrArrayIgnoreCase(L"KerNel32.dll") == 0x7f1bf8b449d16c2d);
+  static_assert(ZxLite::FNV1a<std::uint64_t>::HashCStrArrayCompileTime(L"kernel32.dll") == 0x7f1bf8b449d16c2d);
+  static_assert(ZxLite::FNV1a<std::uint64_t>::HashCStrArrayIgnoreCaseCompileTime(L"KerNel32.dll") == 0x7f1bf8b449d16c2d);
 
-  REQUIRE(ZxLite::FNV1a<std::size_t>::HashCStr(L"kernel32.dll") == 0x7f1bf8b449d16c2d);
-  REQUIRE(ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCase(L"keRnEL32.dll") == 0x7f1bf8b449d16c2d);
-  static_assert(ZxLite::FNV1a<std::size_t>::HashCStrCompileTime(L"kernel32.dll") == 0x7f1bf8b449d16c2d);
-  static_assert(ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCaseCompileTime(L"KerNel32.dll") == 0x7f1bf8b449d16c2d);
+  REQUIRE(ZxLite::FNV1a<std::uint64_t>::HashCStr(L"kernel32.dll") == 0x7f1bf8b449d16c2d);
+  REQUIRE(ZxLite::FNV1a<std::uint64_t>::HashCStrIgnoreCase(L"keRnEL32.dll") == 0x7f1bf8b449d16c2d);
+  static_assert(ZxLite::FNV1a<std::uint64_t>::HashCStrCompileTime(L"kernel32.dll") == 0x7f1bf8b449d16c2d);
+  static_assert(ZxLite::FNV1a<std::uint64_t>::HashCStrIgnoreCaseCompileTime(L"KerNel32.dll") == 0x7f1bf8b449d16c2d);
 }
 
 TEST_CASE("string cmp")

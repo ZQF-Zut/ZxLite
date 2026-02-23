@@ -256,11 +256,14 @@ namespace ZQF::Zut::ZxLite
       }
     }
 
+  public:
+    consteval auto Size() const noexcept -> std::size_t { return N - 1; }
+    consteval auto SizeBytes() const noexcept -> std::size_t { return this->Size() * sizeof(T); }
+
+  public:
     constexpr auto CStr() const noexcept -> const T* { return m_aStr; }
     constexpr auto View() const noexcept -> BaseStrView<T> { return BaseStrView<T>{ this->CStr(), this->Size() }; }
     constexpr auto Data() noexcept -> T* { return const_cast<T*>(m_aStr); } // NOLINT
-    consteval auto Size() const noexcept -> std::size_t { return N - 1; }
-    consteval auto SizeBytes() const noexcept -> std::size_t { return this->Size() * sizeof(T); }
   };
 
   template <typename T, std::size_t N>
