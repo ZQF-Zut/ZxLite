@@ -1,0 +1,81 @@
+name: zqf-zut-zclite-ci
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  windows_x64:
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [windows-msvc-x64-dbg-static-mt, windows-msvc-x64-rel-static-mt, windows-clang-cl-x64-dbg-static-mt, windows-clang-cl-x64-rel-static-mt, windows-msvc-x86-dbg-static-mt, windows-msvc-x86-rel-static-mt]
+
+    runs-on: windows-2022
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+
+    - name: Config
+      run: cmake --preset=windows-${{ matrix.config }} -DZQF_DOXYGEN=OFF -DZQF_DEVELOP=OFF
+
+    - name: Build
+      run: cmake --build .build/windows-${{ matrix.config }}
+
+    - name: Testing
+      run: ctest --test-dir .build/windows-${{ matrix.config }}
+
+  windows_x86:
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [windows-msvc-x86-dbg-static-mt, windows-msvc-x86-rel-static-mt]
+
+    runs-on: windows-2022
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+
+    - name: Config
+      run: cmake --preset=windows-${{ matrix.config }} -DZQF_DOXYGEN=OFF -DZQF_DEVELOP=OFF
+
+    - name: Build
+      run: cmake --build .build/windows-${{ matrix.config }}
+
+    - name: Testing
+      run: ctest --test-dir .build/windows-${{ matrix.config }}
+
+  windows_arm64:
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [windows-msvc-arm64-dbg-static-mt, windows-msvc-arm64-rel-static-mt, windows-clang-cl-arm64-dbg-static-mt, windows-clang-cl-arm64-rel-static-mt]
+
+    runs-on: windows-11-arm
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: arm64
+
+    - name: Config
+      run: cmake --preset=windows-${{ matrix.config }} -DZQF_DOXYGEN=OFF -DZQF_DEVELOP=OFF
+
+    - name: Build
+      run: cmake --build .build/windows-${{ matrix.config }}
+
+    - name: Testing
+      run: ctest --test-dir .build/windows-${{ matrix.config }}
