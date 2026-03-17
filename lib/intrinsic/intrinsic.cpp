@@ -100,18 +100,14 @@ extern "C"
 #if defined(_M_AMD64) || defined(_M_ARM64) || defined(_M_ARM)
   EXCEPTION_DISPOSITION __cdecl __C_specific_handler(_In_ struct _EXCEPTION_RECORD*, _In_ void*, _Inout_ struct _CONTEXT*, _Inout_ struct _DISPATCHER_CONTEXT*)
   {
-#  ifdef _DEBUG
     __debugbreak();
-#  endif
-
-    *reinterpret_cast<void**>(nullptr) = nullptr;
-
     return (EXCEPTION_DISPOSITION)0;
   }
-
 #endif // defined(_M_AMD64) || defined(_M_ARM64) || defined(_M_ARM)
 
 #if defined(_M_IX86)
+  IMAGE_LOAD_CONFIG_DIRECTORY _load_config_used;
+
   int _callnewh(size_t size)
   {
     return 0;
@@ -119,12 +115,7 @@ extern "C"
 
   EXCEPTION_DISPOSITION __cdecl _except_handler3(_In_ struct _EXCEPTION_RECORD*, _In_ void*, _Inout_ struct _CONTEXT*, _Inout_ struct _DISPATCHER_CONTEXT*)
   {
-#  ifdef _DEBUG
     __debugbreak();
-#  endif
-
-    *reinterpret_cast<void**>(nullptr) = nullptr;
-
     return (EXCEPTION_DISPOSITION)0;
   }
 #endif // defined(_M_IX86)
