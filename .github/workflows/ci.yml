@@ -22,13 +22,13 @@ jobs:
         arch: x64
 
     - name: Config
-      run: cmake --preset=windows-${{ matrix.config }} -DZQF_DOXYGEN=OFF -DZQF_DEVELOP=OFF
+      run: cmake --preset=${{ matrix.config }} -DZQF_DOXYGEN=OFF -DZQF_DEVELOP=OFF
 
     - name: Build
-      run: cmake --build .build/windows-${{ matrix.config }}
+      run: cmake --build .build/${{ matrix.config }}
 
     - name: Testing
-      run: ctest --test-dir .build/windows-${{ matrix.config }}
+      run: ctest --test-dir .build/${{ matrix.config }}
 
   windows_x86:
     strategy:
@@ -47,13 +47,13 @@ jobs:
         arch: x64
 
     - name: Config
-      run: cmake --preset=windows-${{ matrix.config }} -DZQF_DOXYGEN=OFF -DZQF_DEVELOP=OFF
+      run: cmake --preset=${{ matrix.config }} -DZQF_DOXYGEN=OFF -DZQF_DEVELOP=OFF
 
     - name: Build
-      run: cmake --build .build/windows-${{ matrix.config }}
+      run: cmake --build .build/${{ matrix.config }}
 
     - name: Testing
-      run: ctest --test-dir .build/windows-${{ matrix.config }}
+      run: ctest --test-dir .build/${{ matrix.config }}
 
   windows_arm64:
     strategy:
@@ -72,10 +72,10 @@ jobs:
         arch: arm64
 
     - name: Config
-      run: cmake --preset=windows-${{ matrix.config }} -DZQF_DOXYGEN=OFF -DZQF_DEVELOP=OFF
+      run: cmake --preset=${{ matrix.config }} -DZQF_DOXYGEN=OFF -DZQF_DEVELOP=OFF
 
     - name: Build
-      run: cmake --build .build/windows-${{ matrix.config }}
+      run: cmake --build .build/${{ matrix.config }}
 
     - name: Testing
-      run: ctest --test-dir .build/windows-${{ matrix.config }}
+      run: ctest --test-dir .build/${{ matrix.config }}
