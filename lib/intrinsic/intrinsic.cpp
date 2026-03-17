@@ -133,8 +133,6 @@ extern "C"
 // NOLINTBEGIN
 extern "C"
 {
-  IMAGE_LOAD_CONFIG_DIRECTORY _load_config_used;
-
   size_t wcslen(const wchar_t* s)
   {
     size_t n;

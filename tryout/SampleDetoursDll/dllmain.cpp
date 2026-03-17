@@ -4,19 +4,45 @@
 #include <Zut/ZxLite/Module.h>
 #include <detours.h>
 
-extern "C" auto __stdcall Start(PCONTEXT ContextRecord, PVOID Parameter) -> void
+using fn_RtlInitCodePageTable_t = decltype(&::RtlInitCodePageTable);
+static fn_RtlInitCodePageTable_t sg_fnRtlInitCodePageTable; // NOLINT
+
+static VOID NTAPI RtlInitCodePageTable_Hook(PUSHORT /*TableBase*/, PCPTABLEINFO CodePageTable)
 {
-  static decltype(&::NtTestAlert) sg_NtTestAlert; // NOLINT
-  sg_NtTestAlert = ::NtTestAlert;
+  NtCurrentPeb()->ActiveCodePage = 0x3A4;
+  NtCurrentPeb()->OemCodePage = 0x3A4;
+  PVOID code_page_table_ptr{};
+  ULONG code_page_table_size{};
+  ::NtGetNlsSectionPtr(0xB, 0x3A4, nullptr, &code_page_table_ptr, &code_page_table_size);
+  sg_fnRtlInitCodePageTable(reinterpret_cast<PUSHORT>(code_page_table_ptr), CodePageTable);
 
-  DetourTransactionBegin();
-  DetourUpdateThread(NtCurrentThread());
-  DetourAttach(reinterpret_cast<PVOID*>(&sg_NtTestAlert), reinterpret_cast<PVOID>(+[]() -> NTSTATUS { return 0x1337; }));
-  DetourTransactionCommit();
+  ::DetourTransactionBegin();
+  ::DetourUpdateThread(NtCurrentThread());
+  ::DetourDetach(reinterpret_cast<PVOID*>(&sg_fnRtlInitCodePageTable), reinterpret_cast<PVOID>(::RtlInitCodePageTable_Hook));
+  ::DetourTransactionCommit();
+}
 
-  using namespace ZQF::Zut;
-  {
-    ZQF::Zut::ZxLite::OpenModule module_ntdll{ ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCaseCompileTime(L"ntdll.dll") };
-    module_ntdll.GetProcedure<decltype(&::LdrInitializeThunk)>(ZxLite::FNV1a<std::size_t>::HashCStrCompileTime("LdrInitializeThunk"))(ContextRecord, Parameter);
-  }
+extern "C" auto NTAPI Start(PTHREAD_START_ROUTINE Function, PVOID Parameter) -> void
+{
+  sg_fnRtlInitCodePageTable = ::RtlInitCodePageTable;
+
+  ::DetourTransactionBegin();
+  ::DetourUpdateThread(NtCurrentThread());
+  ::DetourAttach(reinterpret_cast<PVOID*>(&sg_fnRtlInitCodePageTable), reinterpret_cast<PVOID>(::RtlInitCodePageTable_Hook));
+  ::DetourTransactionCommit();
+
+  using fn_RtlUserThreadStart_t = decltype(&::RtlUserThreadStart);
+  static fn_RtlUserThreadStart_t sg_fnRtlUserThreadStart; // NOLINT
+
+  sg_fnRtlUserThreadStart = reinterpret_cast<fn_RtlUserThreadStart_t>(0x77D958B0);
+  sg_fnRtlUserThreadStart(Function, Parameter);
+
+  // using namespace ZQF::Zut;
+  // {
+  //   ZQF::Zut::ZxLite::OpenModule module_ntdll{ ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCaseCompileTime(L"ntdll.dll") };
+  //   if (module_ntdll)
+  //   {
+  //     module_ntdll.GetProcedure<decltype(&::LdrInitializeThunk)>(ZxLite::FNV1a<std::size_t>::HashCStrCompileTime("LdrInitializeThunk"))(ContextRecord, Parameter);
+  //   }
+  // }
 }

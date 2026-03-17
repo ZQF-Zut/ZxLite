@@ -210,7 +210,6 @@ namespace ZQF::Zut::ZxLite
         return true;
       }
 
-      constexpr auto ntdll_hash = ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCaseCompileTime("ntdll.dll");
       PIMAGE_IMPORT_DESCRIPTOR ntdll_desc_ptr{};
       {
         auto import_desc_ite = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>((PUCHAR)pPEFile + import_dir_ptr->VirtualAddress);
@@ -218,7 +217,7 @@ namespace ZQF::Zut::ZxLite
         {
           const auto dllName = reinterpret_cast<LPCSTR>((PUCHAR)pPEFile + import_desc_ite->Name);
 
-          if (ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCase(dllName) == ntdll_hash)
+          if (ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCase(dllName) == ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCaseCompileTime("ntdll.dll"))
           {
             ntdll_desc_ptr = import_desc_ite;
             break;
@@ -233,7 +232,7 @@ namespace ZQF::Zut::ZxLite
         }
       }
 
-      ZxLite::OpenModule ntdll_module{ ntdll_hash };
+      ZxLite::OpenModule ntdll_module{ ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCaseCompileTime(L"ntdll.dll") };
 
       auto thunk_iat_ptr = reinterpret_cast<PIMAGE_THUNK_DATA>((PUCHAR)pPEFile + ntdll_desc_ptr->FirstThunk);
       auto thunk_int_ptr = reinterpret_cast<PIMAGE_THUNK_DATA>((PUCHAR)pPEFile + (ntdll_desc_ptr->OriginalFirstThunk != 0 ? ntdll_desc_ptr->OriginalFirstThunk : ntdll_desc_ptr->FirstThunk));
@@ -268,6 +267,24 @@ namespace ZQF::Zut::ZxLite
       return true;
     };
 
+    const auto fn_get_entry_va = [](PVOID pPEFile, PVOID pTargetAddress) -> PVOID
+    {
+      const auto dos_header_ptr = reinterpret_cast<PIMAGE_DOS_HEADER>(pPEFile);
+      if (dos_header_ptr->e_magic != IMAGE_DOS_SIGNATURE)
+      {
+        return nullptr;
+      }
+
+      const auto nt_headers_ptr = reinterpret_cast<PIMAGE_NT_HEADERS>(reinterpret_cast<PUCHAR>(pPEFile) + dos_header_ptr->e_lfanew);
+      if (nt_headers_ptr->Signature != IMAGE_NT_SIGNATURE)
+      {
+        return nullptr;
+      }
+
+      const auto entry_rva = nt_headers_ptr->OptionalHeader.AddressOfEntryPoint;
+      return reinterpret_cast<PVOID>(reinterpret_cast<PUCHAR>(pTargetAddress) + entry_rva);
+    };
+
     // create process
     {
       ZxLite::OpenModule kernel32_module{ ZxLite::FNV1a<std::size_t>::HashCStrIgnoreCaseCompileTime(L"kernel32.dll") };
@@ -292,7 +309,7 @@ namespace ZQF::Zut::ZxLite
 
       m_hThread = pi.hThread;
       m_hProcess = pi.hProcess;
-      if (m_hProcess == NULL)
+      if (m_hProcess == nullptr)
       {
         return false;
       }
@@ -350,11 +367,11 @@ namespace ZQF::Zut::ZxLite
         return false;
       }
 
-      const auto status_map = fn_NtMapViewOfSection(section_handle, NtCurrentProcess(), &dll_addr, 0, 0, &offset, &dll_bytes, ViewShare, NULL, PAGE_READONLY);
-      if (status_map != STATUS_SUCCESS)
-      {
-        return false;
-      }
+      fn_NtMapViewOfSection(section_handle, NtCurrentProcess(), &dll_addr, 0, 0, &offset, &dll_bytes, ViewShare, NULL, PAGE_READONLY);
+      // if (status_map != STATUS_SUCCESS)
+      // {
+      //   return false;
+      // }
     }
 
     // map to remote process
@@ -395,9 +412,15 @@ namespace ZQF::Zut::ZxLite
       {
         return false;
       }
-    }
 
-    return true;
+      const auto entry_va = fn_get_entry_va(local_section_address, remote_section_address);
+      if (!entry_va)
+      {
+        return false;
+      }
+
+      return true;
+    }
   }
 
   auto Injector::Resume() const -> bool
@@ -407,3 +430,4 @@ namespace ZQF::Zut::ZxLite
     return status == STATUS_SUCCESS;
   }
 } // namespace ZQF::Zut::ZxLite
+  // namespace ZQF::Zut::ZxLite
